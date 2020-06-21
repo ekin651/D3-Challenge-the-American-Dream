@@ -1,86 +1,93 @@
 // Define SVG area dimensions
 var svgWidth = 900;
-var svgHeight = 600;
+var svgHeight = 500;
 // Define the chart's margins as an object
 var chartMargin = {
-    top: 60,
-    right: 60,
-    bottom: 60,
-    left: 60
+    top: 20,
+    right: 40,
+    bottom: 80,
+    left: 100
 };
 // Define dimensions of the chart area
 var chartWidth = svgWidth - chartMargin.left - chartMargin.right;
 var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
 // Select body, append SVG area to it, and set the dimensions
-var svg = d3.select("#scatter")
+var svg = d3
+    .select("#scatter")
     .append("svg")
     .attr("height", svgHeight)
     .attr("width", svgWidth);
 // Append a group to the SVG area and shift ('translate') it to the right and to the bottom
 var chartGroup = svg.append("g")
     .attr("transform", `translate(${chartMargin.left}, ${chartMargin.top})`);
-
-
-// Load data from csv
-d3.csv("./assets/data/data.csv").then(function (censusData) {
-    // Save some arrays
-    var states = censusData.map(d => d.state);
-    var poverties = censusData.map(d => +d.poverty);
-    var lackofhealthcare = censusData.map(d => +d.healthcareLow);
-    // Display all states in console
-    console.log("States: ", states)
-
-    // Create a linear scale for the horizontal and vertical axis.
+//Initial Params
+var chosenXAis = "poverty";
+// Set up x-scales for the chart
+function xscale(censusData, chosenXAis) {
     var xLinearScale = d3.scaleLinear()
-        .domain([d3.min(poverties) - 5000, d3.max(poverties) + 5000])
-        .range([0, chartWidth])
+        .domain([d3.min(censusData, d => d[chosenXAis]) * 0.8,
+            d3.max(censusData, d => d[chosenXAis]) * 1.2
+        ])
+        .range([0, chartWidth]);
+    return xLinearScale;
+}
+// Load data from csv
+d3.csv("assets/data/data.csv").then(function(censusData, err) {
+    if (err) throw err;
+    censusData.forEach(function(data) {
+        data.poverty = +data.poverty;
+        data.healthcare = +data.healthcare;
+    });
+    var xLinearScale = xscale(censusData, chosenXAis);
     var yLinearScale = d3.scaleLinear()
-        .domain([d3.min(lackofhealthcare) - 4, d3.max(lackofhealthcare) + 4])
+        .domain([0, d3.max(censusData, d => d.healthcare)])
         .range([chartHeight, 0]);
     // Create chart axis
-    var bottomAxis = d3.axisBottom(xLinearScale).ticks(10);
-    var leftAxis = d3.axisLeft(yLinearScale).ticks(10);
-    chartGroup.append("g")
-        .call(leftAxis);
-    chartGroup.append("g")
+    var bottomAxis = d3.axisBottom(xLinearScale);
+    var leftAxis = d3.axisLeft(yLinearScale);
+    // append x axis
+    var xAxis = chartGroup.append("g")
+        .classed("x-axis", true)
         .attr("transform", `translate(0, ${chartHeight})`)
         .call(bottomAxis);
-
-    // Add data points
-    chartGroup.selectAll("circle")
+    // append y axis
+    chartGroup.append("g")
+        .call(leftAxis);
+    // Add data points (circles)
+    var circlesGroup = chartGroup.selectAll("circle")
         .data(censusData)
         .enter()
         .append("circle")
-        .attr("cx", d => xLinearScale(+d.poverty))
-        .attr("cy", d => yLinearScale(+d.healthcareLow))
-        .attr("r", 15)
-        .style("fill", "blue")
+        .attr("cx", d => xLinearScale(d[chosenXAis]))
+        .attr("cy", d => yLinearScale(d.healthcare))
+        .attr("r", 10)
+        .style("fill", "#009cff")
         .attr("opacity", ".5");
-
-    // add state abbreviation
-    chartGroup.append("g")
-        .selectAll("text")
+    chartGroup.selectAll("#scatter")
         .data(censusData)
         .enter()
         .append("text")
-        .attr("x", d => xLinearScale(+d.poverty))
-        .attr("y", d => yLinearScale(+d.healthcareLow) + 5)
-        .style("text-anchor", "middle")
+        .attr("text-anchor", "middle")
+        .attr("font-size", "10px")
+        .style("fill", "white")
+        .attr("x", d => xLinearScale(d[chosenXAis]))
+        .attr("y", d => yLinearScale(d.healthcare) + 5)
         .text(d => d.abbr);
-
+    var labelGroup = chartGroup.append("g")
+        .attr("transform", `translate(${chartWidth/2}, ${chartHeight+20})`);
     // text label for the x axis
-    svg.append("text")
-        .attr("y", svgHeight - 20)
-        .attr("x", svgWidth / 2)
-        .attr("dy", "1em")
-        .style("text-anchor", "middle")
+    chartGroup.append("text")
+        .attr("y", chartHeight + 1.5 * chartMargin.bottom / 2)
+        .attr("x", chartWidth / 2)
+        .classed("axis-text", true)
         .text("In Poverty (%)");
     // text label for the y axis
-    svg.append("text")
+    chartGroup.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 0)
-        .attr("x", 0 - (svgHeight / 2))
-        .attr("dy", "1em")
-        .style("text-anchor", "middle")
+        .attr("y", 0 - chartMargin.left)
+        .attr("x", 0 - (chartHeight / 2))
+        .attr("dy", "3em")
+        // .style("text-anchor", "middle")
+        .classed("axis-text", true)
         .text("Lacks Healthcare (%)");
 });
