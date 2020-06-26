@@ -12,7 +12,7 @@ The data set included with the assignment is based on 2014 ACS 1-year estimates:
 
 ### Before You Begin
 
-1. Create a new repository for this project called `D3-challenge`. **Do not add this homework to an existing repository**.
+1. Create a new repository for this project called `D3-challenge`. 
 
 2. Clone the new repository to your computer.
 
@@ -24,7 +24,7 @@ The data set included with the assignment is based on 2014 ACS 1-year estimates:
 
 ## Your Task
 
-### Core Assignment: D3 Dabbler (Required Assignment)
+### Core Assignment: D3 Dabbler
 
 ![4-scatter](Images/4-scatter.jpg)
 
