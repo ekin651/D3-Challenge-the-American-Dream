@@ -42,7 +42,5 @@ Using the D3 techniques we taught you in class, create a scatter plot that repre
 
 
 
-### Copyright
 
-Trilogy Education Services © 2019. All Rights Reserved.
 
